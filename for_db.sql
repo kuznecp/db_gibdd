@@ -1,0 +1,95 @@
+CREATE TABLE IF NOT EXISTS gibdd (
+	id INTEGER PRIMARY KEY,
+	address VARCHAR(100) NOT NULL,
+	phone VARCHAR(50) NOT NULL,
+	email VARCHAR(50) NOT NULL,
+	duty VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS personal (
+	id INTEGER PRIMARY KEY,
+	last_name VARCHAR(50) NOT NULL,
+	first_name VARCHAR(50) NOT NULL,
+	patronymic VARCHAR(50) NOT NULL,
+	phone VARCHAR(50) NOT NULL,
+	address VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS information (
+	id INTEGER PRIMARY KEY,
+	id_department INTEGER REFERENCES gibdd(id) ON DELETE CASCADE,
+	address VARCHAR(100) NOT NULL,
+	number_of_victims INTEGER NOT NULL CHECK (number_of_victims > 0),
+	stopper BOOLEAN NOT NULL,
+	data DATE NOT NULL,
+	place_of_hit VARCHAR(50) NOT NULL,
+	damage VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS insurance (
+	id INTEGER PRIMARY KEY,
+	name VARCHAR(50) NOT NULL,
+	address VARCHAR(100) NOT NULL,
+	phone VARCHAR(50) NOT NULL,
+	email VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS manufacturers (
+	id INTEGER PRIMARY KEY,
+	name VARCHAR(50) NOT NULL,
+	address VARCHAR(100) NOT NULL,
+	number_of_defective INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS offenses (
+	id INTEGER PRIMARY KEY,
+	id_department INTEGER REFERENCES gibdd(id) ON DELETE CASCADE,
+	type VARCHAR(50) NOT NULL,
+	punishment VARCHAR(50) NOT NULL,
+	subject VARCHAR(50) NOT NULL,
+	reason VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS penalty (
+	id INTEGER PRIMARY KEY,
+	id_offenses INTEGER REFERENCES offenses(id) ON DELETE CASCADE,
+	sum INTEGER NOT NULL,
+	data DATE NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS transport (
+	id INTEGER PRIMARY KEY,
+	id_department INTEGER REFERENCES gibdd(id) ON DELETE CASCADE,
+	id_brand INTEGER REFERENCES manufacturers(id) ON DELETE CASCADE,
+	technical_passport INTEGER NOT NULL,
+	type VARCHAR(50) NOT NULL,
+	year_of_release INTEGER NOT NULL,
+	weight INTEGER NOT NULL,
+	engine_capacity INTEGER NOT NULL,
+	color VARCHAR(50) NOT NULL,
+	price INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS witnesses (
+	id INTEGER PRIMARY KEY,
+	id_profile INTEGER REFERENCES personal(id) ON DELETE CASCADE,
+	id_case INTEGER REFERENCES information(id) ON DELETE CASCADE,
+	defend BOOLEAN NOT NULL,
+	in_group BOOLEAN NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS drivers (
+	id INTEGER PRIMARY KEY,
+	id_profile INTEGER REFERENCES personal(id) ON DELETE CASCADE,
+	id_case INTEGER REFERENCES information(id) ON DELETE CASCADE,
+	id_car INTEGER REFERENCES transport(id) ON DELETE CASCADE,
+	id_insurance INTEGER REFERENCES insurance(id) ON DELETE CASCADE,
+	category VARCHAR(50) NOT NULL
+);
+
+CREATE USER driver WITH PASSWORD '1234';
+GRANT SELECT ON drivers, insurance, transport, manufacturers, gibdd TO driver;
+
+CREATE USER officer WITH PASSWORD '1234';
+GRANT SELECT ON ALL TABLES IN SCHEMA PUBLIC TO officer;
+GRANT INSERT, UPDATE, DELETE ON information, penalty TO officer;
